@@ -31,19 +31,36 @@ public class Q_manager : MonoBehaviour {
 	[SerializeField]
 	GameObject disp_txt;
 
-	/// <summary>
-	/// 正解時のエフェクト
+    /// <summary>
+	///脚注として表示する文字
 	/// </summary>
 	[SerializeField]
+    GameObject supplement_txt;
+
+
+    /// <summary>
+    ///ジャンルとして表示する文字
+    /// </summary>
+    [SerializeField]
+    GameObject genre_txt;
+
+    /// <summary>
+    /// 正解時のエフェクト
+    /// </summary>
+    [SerializeField]
 	GameObject hit_bullet;
 
 
     [SerializeField]
-    AudioClip se;
+    Anime_maneger Anime_maneger;
+
+
+
     [SerializeField]
-    AudioSource se_Source;
+    AudioSource gun_se;
 
 
+    //ヒットエフェクトを出すポジション
     Vector3[] hit_position = new Vector3[]{
 	  new Vector3 (-2.2f, 2.5f, -2.5f),
 	  new Vector3 (-2f, 3.4f, -2.5f),
@@ -66,105 +83,113 @@ public class Q_manager : MonoBehaviour {
 
 	int now_level ;
 
+    /// <summary>
+    /// データベースのテーブル名
+    /// </summary>
+    string table_name;
+
+
 	/// <summary>
-	/// レベルの配列の長さ
+	/// 各レベルに当てはまる問題数
 	/// </summary>
-	int level_array_length;
+	int level_Q_length;
 
 	/// <summary>
 	/// 問題番号
 	/// </summary>
 	int Q_number;
 
+    SqliteDatabase sqlDB;
+
+
+    void Start () {
+        /*いらない
+        data_warehose = GameObject.Find("data_warehose");
+        d_w = data_warehose.GetComponent<data_warehose>();
+        */
+        type_txt.GetComponent<Text>().resizeTextForBestFit = true;
+        disp_txt.GetComponent<Text>().resizeTextForBestFit = true;
+
+        table_name = "Normal_Q";
+        sqlDB = new SqliteDatabase("word.db");
+        DB_Access();
+    }
+
+    /*流れ
+    * 現在のレベルを取る
+    * そのレベルにあった問題をsqlで取ってくる(候補)
+    *その候補の個数を取る
+    * 個数に合わせてランダムな数を生成する
+    * 問題を指定する
+    * 問題を出題する
+    */
+
+
+
+    void DB_Access()
+    {
+        
+        string query = Make_query();
+        DataTable wordDB = sqlDB.ExecuteQuery(query);
+
+        string furigana;
+        string disp_string;
+        string genre;
+        string supplement;
+
+        foreach (DataRow dr in wordDB.Rows)
+        {
+
+            furigana = (string)dr["ふりがな"];
+            disp_string = (string)dr["表示文字"];
+            genre = (string)dr["ジャンル"];
+            supplement = (string)dr["脚注"];
+            Debug.Log("ふりがな " + furigana + " 表示文字 "  + disp_string + " ジャンル " + genre + " 脚注 " + supplement);
+
+            Q_place((string)dr["ふりがな"], (string)dr["表示文字"], (string)dr["ジャンル"],(string)dr["脚注"]);
+        }
+    }
+
 
     
 
-	void Start () {
-        data_warehose = GameObject.Find("data_warehose");
-        d_w = data_warehose.GetComponent<data_warehose>();
-        type_txt.GetComponent<Text>().resizeTextForBestFit = true;
-        disp_txt.GetComponent<Text>().resizeTextForBestFit = true;
-        se_Source.clip = se;
-        lottery();
+    string Make_query( )
+    {
+        //select [カラム],[カラム](略) from [テーブル名] where [条件] order by random() limit 1    でランダム1件取得
+        string query;
+        query = "select レベル,文字数,表示文字,ふりがな,ジャンル,脚注 from " +
+            table_name + " where レベル = " + status_manager.now_level + " ORDER BY RANDOM() LIMIT 1 ";
+        return query;
+    }
 
-	}
+
+
+
 
 
 	/// <summary>
-	/// 問題の抽選
+	/// ゾンビがアニメーションするのかを決定
 	/// </summary>
 	public void lottery()
 	{
-		
-		now_level = status_manager.now_level;//レベルを取る
-		switch (now_level)//格納されている各レベルの配列の長さを取る
-		{
-			case 1:
-				level_array_length = d_w.words_lv1.GetLength(0);
-				Q_number = random(level_array_length);
-				Q_place(d_w.words_lv1[Q_number].Typ, d_w.words_lv1[Q_number].disp);
-				break;
-            case 2:
-                level_array_length = d_w.words_lv2.GetLength(0);
-                Q_number = random(level_array_length);
-                Q_place(d_w.words_lv2[Q_number].Typ, d_w.words_lv2[Q_number].disp);
-                break;
-            case 3:
-                level_array_length = d_w.words_lv3.GetLength(0);
-                Q_number = random(level_array_length);
-                Q_place(d_w.words_lv3[Q_number].Typ, d_w.words_lv3[Q_number].disp);
-                break;
-            case 4:
-                level_array_length = d_w.words_lv4.GetLength(0);
-                Q_number = random(level_array_length);
-                Q_place(d_w.words_lv4[Q_number].Typ, d_w.words_lv4[Q_number].disp);
-                break;
-            case 5:
-                level_array_length = d_w.words_lv5.GetLength(0);
-                Q_number = random(level_array_length);
-                Q_place(d_w.words_lv5[Q_number].Typ, d_w.words_lv5[Q_number].disp);
-                break;
-            case 6:
-                level_array_length = d_w.words_lv6.GetLength(0);
-                Q_number = random(level_array_length);
-                Q_place(d_w.words_lv6[Q_number].Typ, d_w.words_lv6[Q_number].disp);
-                break;
-            case 7:
-                level_array_length = d_w.words_lv7.GetLength(0);
-                Q_number = random(level_array_length);
-                Q_place(d_w.words_lv7[Q_number].Typ, d_w.words_lv7[Q_number].disp);
-                break;
-            case 8:
-                level_array_length = d_w.words_lv8.GetLength(0);
-                Q_number = random(level_array_length);
-                Q_place(d_w.words_lv8[Q_number].Typ, d_w.words_lv8[Q_number].disp);
-                break;
-            case 9:
-                level_array_length = d_w.words_lv9.GetLength(0);
-                Q_number = random(level_array_length);
-                Q_place(d_w.words_lv9[Q_number].Typ, d_w.words_lv9[Q_number].disp);
-                break;
-            case 10:
-                level_array_length = d_w.words_lv10.GetLength(0);
-                Q_number = random(level_array_length);
-                Q_place(d_w.words_lv10[Q_number].Typ, d_w.words_lv10[Q_number].disp);
-                break;
-            default:
-				break;
-		}
-		
-
-	}
+            Anime_maneger.Zonbi_Shake();
+        //毎回ブラせてもウザくなかったので毎回アニメするが頻度を減らしたければこれを
+        //int Roulette = random(1, 100);
+        //if (Roulette <= 50)
+        //{
+        //}
+    }
 
 
-	/// <summary>
-	/// 問題を抽選するためのランダムな数字を出す
-	/// </summary>
-	/// <param name="digits">インデックス数(-1までの数が返る)</param>
-	int random(int digits)
+/// <summary>
+/// ランダムな数字を返す
+/// </summary>
+/// <param name="start">開始値、以上</param>
+/// <param name="end">終了値、未満</param>
+/// <returns></returns>
+	int random(int start, int end)
 	{
-		System.Random random = new System.Random();
-		int random_number = random.Next(digits - 1);
+        int random_number = Random.Range(start, end);
 		return random_number;
 	}
 
@@ -174,17 +199,23 @@ public class Q_manager : MonoBehaviour {
 	/// 現在の問題を指定する
 	/// </summary>
 	/// <param name="question">打つ問題(文字列)</param>
-	public void Q_place(string type_question , string disp_question)
+	public void Q_place(string type_question , string disp_question ,string question_genre, string question_supplement)
 	{
 		now_question = type_question;
         now_question_length = type_question.Length;
-        if (now_question_length>14)
-        {
+        //if (now_question_length>14)
+        //{
 
-        }
+        //}
         type_txt.GetComponent<Text>().text = now_question;
 		disp_txt.GetComponent<Text>().text = disp_question;
-	}
+        genre_txt.GetComponent<Text>().text = question_genre;
+        if (question_supplement != null)
+        {
+            supplement_txt.GetComponent<Text>().text = question_supplement;
+        }
+
+    }
 
 
 	/// <summary>
@@ -196,12 +227,13 @@ public class Q_manager : MonoBehaviour {
 
 		if (now_question.Length != 0 && type == now_question.Substring(0, 1))//先頭文字と一緒
 		{
-            se_Source.Play();
+            gun_se.Play();
             now_question = now_question.Remove(0, 1);//その文字を消す
 			type_txt.GetComponent<Text>().text = now_question;
-            int pos = random(8);
+            int pos = random(0,8);
             Instantiate(hit_bullet, hit_position[pos], Quaternion.identity) ;
             status_manager.add_score();
+            lottery();
         }
 		if (now_question.Length == 0)//打ち切った
 		{
@@ -214,12 +246,21 @@ public class Q_manager : MonoBehaviour {
 
 
     /// <summary>
-    /// 打ったときの処理
+    /// 打ち切ったときの処理
     /// </summary>
 	void shoot()
 	{
         status_manager.add_score(now_question_length);
-        lottery();
-	}
+        DB_Access();
+    }
 
+
+
+    /// <summary>
+    /// デバッグボタン用処理
+    /// </summary>
+    public void DebugDB()
+    {
+        DB_Access();
+    }
 }

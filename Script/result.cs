@@ -5,8 +5,7 @@ using UnityEngine.UI;
 
 public class result : MonoBehaviour {
 
-	[SerializeField]
-	admob admob;
+
 
 	[SerializeField]
 	GameObject LEVEL_num;
@@ -14,29 +13,33 @@ public class result : MonoBehaviour {
 	[SerializeField]
 	GameObject SCORE_num;
 
+    [SerializeField]
+    Sound_maneger Sound_maneger;
 
-	GameObject finish;
+    GameObject finish;
 	finish_status finish_status;
+
+
+    GameObject admob_obj;
+    Admob admob;
 
     GameObject d_w;
 
 
-
-    [SerializeField]
-    AudioClip se;
     [SerializeField]
     AudioSource se_Source;
 
 
     // Use this for initialization
     void Start () {
-		admob.RequestBanner(1);
-        admob.RequestInterstitial();
+        admob_obj = GameObject.Find("admob");
+        admob = admob_obj.GetComponent<Admob>();
+        admob.showBannerAd(2);
         finish = GameObject.Find("finish_status(Clone)");
 		finish_status = finish.GetComponent<finish_status>();
-        d_w = GameObject.Find("data_warehose");
-        Destroy(d_w);
-        se_Source.clip = se;
+        // d_w = GameObject.Find("data_warehose");
+        //Destroy(d_w);
+        admob.showInterstitialAd();
         disp_result();
 
 	}
@@ -52,24 +55,28 @@ public class result : MonoBehaviour {
 	}
 
 
+    /// <summary>
+    /// リザルトのOKボタンをした時の挙動
+    /// </summary>
     public void on_click()
     {
-        admob.DisplayInterstitial();
+
+        admob.Bannerdestroy();
 
         Destroy(finish);
-        se_Source.Play();
-        admob.destroy();
+        Destroy(admob_obj);
+        Sound_maneger.play_button_se();
 
         StartCoroutine("LoadSceneAndWait");
-
-
-
     }
+
+
+
     IEnumerator LoadSceneAndWait()
     {
-        AsyncOperation ope = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync("start");
+        AsyncOperation ope = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync("Top");
         ope.allowSceneActivation = false;
-        yield return new WaitForSeconds(0.2f);
+        yield return new WaitForSeconds(0.5f);
         ope.allowSceneActivation = true;
     }
 }

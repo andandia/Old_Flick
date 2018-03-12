@@ -67,19 +67,20 @@ public class input : MonoBehaviour {
 	public void On_TouchStart(Vector2 worldPos)
 	{
 		
-		//Debug.Log("worldPos " + worldPos);
+		Debug.Log("worldPos " + worldPos);
+        touch_point_x = -1;
+        touch_point_y = -1;
 
-		
-		if (worldPos.x >= touch_point_line_x[0] && worldPos.x < touch_point_line_x[1])//x範囲判定
+        if (worldPos.x >= touch_point_line_x[0] && worldPos.x < touch_point_line_x[1] && worldPos.y < -0.5 )//x範囲判定
 		{
 			touch_point_x = 0;
 		}
-		else if (worldPos.x >= touch_point_line_x[1] && worldPos.x < touch_point_line_x[2])
-		{
+		else if (worldPos.x >= touch_point_line_x[1] && worldPos.x < touch_point_line_x[2] && worldPos.y < -0.5)
+        {
 			touch_point_x = 1;
 		}
-		else if (worldPos.x >= touch_point_line_x[2] && worldPos.x <= touch_point_line_x_min)
-		{
+		else if (worldPos.x >= touch_point_line_x[2] && worldPos.x <= touch_point_line_x_min && worldPos.y < -0.5)
+        {
 			touch_point_x = 2;
 		}
 

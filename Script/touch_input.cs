@@ -90,7 +90,8 @@ public class touch_input : MonoBehaviour {
 		{
 			//Debug.Log("タッチスタート");
 			startpos = Camera.main.ScreenToWorldPoint(start_touch.position);
-			play.On_TouchStart(startpos);
+            Debug.Log("startpos " + startpos);
+            play.On_TouchStart(startpos);
 			
 		}
 	}

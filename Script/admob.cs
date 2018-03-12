@@ -1,129 +1,136 @@
-﻿using UnityEngine;
+﻿using GoogleMobileAds.Api;
 using System.Collections;
-using GoogleMobileAds.Api;
-using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 
 /// <summary>
 /// admob管理
 /// </summary>
-public class admob : MonoBehaviour
+public class Admob : MonoBehaviour
 {
-    public string Android_Banner;
-    public string Android_Interstitial;
-    public string ios_Banner;
-    public string ios_Interstitial;
 
-    private InterstitialAd interstitial;
-    private AdRequest request;
-    private static admob instance;
+    private string Android_BannerId = "ca-app-pub-2640689103025541/2738794711";
+    private string Android_InterstitialId = "ca-app-pub-2640689103025541/5395499121";
+    private string ios_BannerId;
+    private string ios_InterstitialId;
 
-    public delegate void CallBack();
 
-    private CallBack callback;
+    BannerView bannerAd;
+    InterstitialAd interstitial;
 
-    public BannerView bannerView;
+    /// <summary>
+    /// 全面広告が表示されたかのフラグ
+    /// </summary>
+    bool AdDisplayed;
 
-    void Start()
+
+    /// <summary>
+    /// バナー広告の表示
+    /// </summary>
+    /// <param name="AdPos">1…上、2…下</param>
+    public void showBannerAd(int AdPos)
     {
-        instance = this;
 
-        // RequestInterstitial();
-       
-           // RequestBanner(call_pos);
-        
-        
-    }
-
-    public void RequestBanner(int position)
-    {
 #if UNITY_ANDROID
-        string adUnitId = Android_Banner;
+        string adUnitId = Android_BannerId;
 #elif UNITY_IOS
-            string adUnitId = ios_Banner;
+        string adUnitId = ios_BannerId;
+#else
+        string adUnitId = adID;
 #endif
-        if (position == 1)//バナーが下
+
+
+
+        //***For Testing in the Device***
+        /*
+        AdRequest request = new AdRequest.Builder()
+       .AddTestDevice(AdRequest.TestDeviceSimulator)       // Simulator.
+       .AddTestDevice("C9946BE5CA92B1E4EA4F93398364018E")  // My test device.
+       .Build();
+       */
+
+        //***For Production When Submit App***
+        AdRequest request = new AdRequest.Builder().Build();
+
+        if (AdPos == 1)//バナーが上
         {
-            bannerView = new BannerView(adUnitId, AdSize.Banner, AdPosition.Bottom);
-            AdRequest request = new AdRequest.Builder()
-                    //.AddTestDevice("CEE73F65BCE4660D4BA3CE319889C572")//製品では取る
-                    .Build();
-            bannerView.LoadAd(request);
+            bannerAd = new BannerView(adUnitId, AdSize.SmartBanner, AdPosition.Top);
+        }else if(AdPos == 2)
+        {
+            bannerAd = new BannerView(adUnitId, AdSize.SmartBanner, AdPosition.Bottom);
         }
-        else if (position == 2)//バナーが上
-        {
-            bannerView = new BannerView(adUnitId, AdSize.Banner, AdPosition.Top);
-            AdRequest request = new AdRequest.Builder()
-                    //.AddTestDevice("CEE73F65BCE4660D4BA3CE319889C572")
-                    .Build();
-            bannerView.LoadAd(request);
-        }
 
-        
+        bannerAd.LoadAd(request);
     }
 
-    public void RequestInterstitial()
+
+
+
+
+    public void showInterstitialAd()
     {
-#if UNITY_ANDROID
-        string adUnitId = Android_Interstitial;
-#elif UNITY_IOS
-            string adUnitId = ios_Interstitial;
-#endif
-
-        interstitial = new InterstitialAd(adUnitId);
-        interstitial.OnAdClosed += delegate (object sender, EventArgs args)
-        {
-            interstitial.Destroy();
-            RequestInterstitial();
-
-#if UNITY_IOS
-                    if (callback != null)
-                    {
-                            callback();
-                    }
-#endif
-        };
-
-        request = new AdRequest.Builder()
-                //.AddTestDevice("CEE73F65BCE4660D4BA3CE319889C572")
-                .Build();
-
-        interstitial.LoadAd(request);
-    }
-
-    public static void DisplayInterstitial(CallBack cb = null)
-    {
-        instance.displayInterstitial(cb);
-    }
-
-    private void displayInterstitial(CallBack cb = null)
-    {
-        callback = cb;
-
+        //Show Ad
         if (interstitial.IsLoaded())
         {
             interstitial.Show();
-#if !UNITY_IOS || UNITY_EDITOR
-            if (callback != null)
-            {
-                callback();
-            }
-#endif
+            Debug.Log("SHOW AD XXX");
         }
-        else
-        {
-            if (callback != null)
-            {
-                callback();
-            }
-        }
+
     }
 
-
-    public void destroy()
+    
+    public void RequestInterstitialAds()
     {
-        bannerView.Destroy();
+
+#if UNITY_ANDROID
+        string adUnitId = Android_InterstitialId;
+#elif UNITY_IOS
+        string adUnitId = adID;
+#else
+        string adUnitId = adID;
+#endif
+
+        // Initialize an InterstitialAd.
+        interstitial = new InterstitialAd(adUnitId);
+
+        //***テスト用***
+        /*
+        AdRequest request = new AdRequest.Builder()
+       .AddTestDevice(AdRequest.TestDeviceSimulator)       // Simulator.
+       .AddTestDevice("C9946BE5CA92B1E4EA4F93398364018E")  // My test device.
+       .Build();
+       */
+
+        //***Production***
+        AdRequest request = new AdRequest.Builder().Build();
+
+        //Register Ad Close Event
+        interstitial.OnAdClosed += Interstitial_OnAdClosed;
+
+        // Load the interstitial with the request.
+        interstitial.LoadAd(request);
+
+        Debug.Log("AD LOADED XXX");
+
     }
 
-   
+    //Ad Close Event
+    private void Interstitial_OnAdClosed(object sender, System.EventArgs e)
+    {
+        interstitial.Destroy();
+    }
+
+
+
+
+
+    public void Bannerdestroy()
+    {
+        bannerAd.Destroy();
+    }
+
+
+
+
 }
